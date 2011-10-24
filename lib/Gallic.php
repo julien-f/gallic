@@ -24,8 +24,7 @@ final class Gallic
 
 	private function __clone() {}
 }
-Gallic::$include_dirs = array(defined('__DIR__') ? __DIR__ : dirname(__FILE__)) +
-						explode(':', get_include_path());
+Gallic::$include_dirs[] = defined('__DIR__') ? __DIR__ : dirname(__FILE__);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,6 +38,63 @@ final class Gallic_Path
 	public static function join()
 	{
 		return implode(DIRECTORY_SEPARATOR, func_get_args());
+	}
+
+
+	/**
+	 * Normalizes a path, which means, removes every '//', '.' and '..'.
+	 *
+	 * @param string $path The path to normalize.
+	 *
+	 * @return string The path normalized.
+	 */
+	public static function normalize($path)
+	{
+		if ($path === '')
+		{
+			return '.';
+		}
+
+		$path = explode(DIRECTORY_SEPARATOR, $path);
+
+		$out = array($path[0]);
+		array_shift($path);
+
+		foreach ($path as $component)
+		{
+			if (($component === '') || ($component === '.'))
+			{
+				continue;
+			}
+
+			if (($component === '..') && (($prev = end($out)) !== '..'))
+			{
+				if ($prev !== '')
+				{
+					array_pop($out);
+				}
+				continue;
+			}
+
+			array_push($out, $component);
+		}
+
+		$n = count($out);
+		if ($n === 0)
+		{
+			return '.';
+		}
+
+		if ($n === 1)
+		{
+			if ($out[0] === '')
+			{
+				return '/';
+			}
+			return $out[0];
+		}
+
+		return implode(DIRECTORY_SEPARATOR, $out);
 	}
 
 	private function __construct() {}
@@ -93,13 +149,13 @@ final class Gallic_Loader
 	public static function autoload($classname)
 	{
 		return (self::loadClass($classname) &&
-				(class_exists($classname, false) ||
-				interface_exists($classname, false)));
+		        (class_exists($classname, false) ||
+		         interface_exists($classname, false)));
 	}
 
 	public static function loadClass($classname, $dirs = null)
 	{
-		$path = str_replace('_', DIRECTORY_SEPARATOR, $classname) . '.php';
+		$path = str_replace('_', DIRECTORY_SEPARATOR, $classname).'.php';
 		return self::loadFile($path, $dirs);
 	}
 
