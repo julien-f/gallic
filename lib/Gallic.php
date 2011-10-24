@@ -117,13 +117,13 @@ final class Gallic_File
 
 		if (Gallic_Path::is_absolute($path))
 		{
-			return ($predicate($path) ? $path : false);
+			return (call_user_func($predicate, $path) ? $path : false);
 		}
 
 		foreach ($dirs as $dir)
 		{
 			$full_path = Gallic_Path::join($dir, $path);
-			if ($predicate($full_path))
+			if (call_user_func($predicate, $full_path))
 			{
 				return $full_path;
 			}
