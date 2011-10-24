@@ -113,7 +113,7 @@ final class Gallic_File
 			$predicate = 'is_readable';
 		}
 
-		$dirs = (array) $dirs + Gallic::$include_dirs;
+		$dirs = $dirs !== null ? (array) $dirs : Gallic::$include_dirs;
 
 		if (Gallic_Path::is_absolute($path))
 		{
