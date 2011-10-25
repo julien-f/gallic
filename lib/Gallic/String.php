@@ -11,19 +11,18 @@ class Gallic_String
 			return false;
 		}
 
-		return ($prefix === substr($string, 0, $prefix_l));
+		return (strncmp($string, $prefix, $prefix_l) === 0);
 	}
 
 	public static function has_suffix($string, $suffix)
 	{
-		$string_l = strlen($string);
 		$suffix_l = strlen($suffix);
 
-		if ($suffix_l > $string_l)
+		if ($suffix_l > strlen($string))
 		{
 			return false;
 		}
 
-		return ($suffix === substr($string, $string_l - $suffix_l));
+		return (substr_compare($string, $suffix, -$suffix_l) === 0);
 	}
 }
