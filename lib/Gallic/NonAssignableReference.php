@@ -17,7 +17,7 @@
  *   function &g()
  *   {
  *     static $v = array();
- *     return Gallic_NonAssignableReference::create($v);
+ *     return new Gallic_NonAssignableReference($v);
  *   }
  *   $v = &g();
  *   $v[0] = 4; // g static is variable is modified.
@@ -36,12 +36,6 @@
  */
 class Gallic_NonAssignableReference implements ArrayAccess, Countable, IteratorAggregate
 {
-	public static function &create(&$object)
-	{
-		$ref = new self($object);
-		return $ref;
-	}
-
 	public function __construct(&$object)
 	{
 		$this->_ref = &$object;
@@ -57,7 +51,7 @@ class Gallic_NonAssignableReference implements ArrayAccess, Countable, IteratorA
 		return clone $this->_ref;
 	}
 
-	public function &__get($name)
+	public function __get($name)
 	{
 		return $this->_ref->$name;
 	}
