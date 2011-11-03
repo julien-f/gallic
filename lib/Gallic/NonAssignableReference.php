@@ -14,12 +14,12 @@
  *   $v[0] = 4; // f static is variable is modified.
  *   $v = 3;    // f static variable is assigned.
  *
- *   function &g()
+ *   function g()
  *   {
  *     static $v = array();
  *     return new Gallic_NonAssignableReference($v);
  *   }
- *   $v = &g();
+ *   $v = g();
  *   $v[0] = 4; // g static is variable is modified.
  *   $v = 3;    // g static variable is NOT assigned!
  * </code>
