@@ -189,36 +189,31 @@ final class Gallic_Type
 		$class = new ReflectionClass($class);
 		$interface = new ReflectionClass($interface);
 
-		$i_methods = $interface->getMethods(ReflectionMethod::IS_PUBLIC |
-		                                    ReflectionMethod::IS_PROTECTED);
+		$i_methods = $interface->getMethods(ReflectionMethod::IS_PUBLIC);
 
 		foreach ($i_methods as $i_method)
 		{
 			$c_method = $class->getMethod($i_method->getName());
 
 			/*
+			 * - The  class  method   MUST  be  public.
+			 *
 			 * - If the interface  method is static, the class  method also MUST
 			 *   be and vice-versa.
 			 *
 			 * - The class method MUST have  at most the same number of required
 			 *   parameters.
-			 *
-			 * - The  class  method   MUST  be  at  least  as   visible  as  the
-			 *   interface's.
 			 */
-			if (
-				(
-					$i_method->isStatic() !== $c_method->isStatic()
-				) ||
+			if (!(
+				$c_method->isPublic()
+				&&
+				($i_method->isStatic() === $c_method->isStatic())
+				&&
 				(
 					$c_method->getNumberOfRequiredParameters() >
 					$i_method->getNumberOfRequiredParameters()
-				) ||
-				(
-					$c_method->isPrivate() ||
-					($c_method->isProtected() && $i_method->isPublic())
 				)
-			)
+			))
 			{
 				return false;
 			}
