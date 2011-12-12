@@ -252,36 +252,38 @@ class Gallic_TypeCheckerCompiler
 
 	private function _list()
 	{
-		$result = array();
+		$result = $this->_or();
 
+		if (!$this->_check(','))
+		{
+			return $result;
+		}
+
+		$result = array($result);
 		do
 		{
 			$result[] = $this->_or();
 		}
 		while ($this->_check(','));
 
-		if (count($result) === 1)
-		{
-			return reset($result);
-		}
-
 		return new Gallic_TypeChecker_List($result);
 	}
 
 	private function _or()
 	{
-		$result = array();
+		$result = $this->_array();
 
+		if (!$this->_check('|'))
+		{
+			return $result;
+		}
+
+		$result = array($result);
 		do
 		{
 			$result[] = $this->_array();
 		}
 		while ($this->_check('|'));
-
-		if (count($result) === 1)
-		{
-			return reset($result);
-		}
 
 		return new Gallic_TypeChecker_Or($result);
 	}
