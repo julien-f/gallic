@@ -60,6 +60,11 @@ final class Gallic_Type
 			'string'    => '',
 		);
 
+		if ($type === 'mixed')
+		{
+			return true;
+		}
+
 		if (isset($validators[$type]))
 		{
 			$function = $validators[$type];
@@ -122,56 +127,6 @@ final class Gallic_Type
 		}
 
 		return ($cache[$key] = $result);
-	}
-
-	/**
-	 * Checks whether the type of a value matches one of the given type pattern.
-	 *
-	 * A pattern is a string which can be  a type name (as used in “is()”) or an
-	 * interface name prefixed by “~” for Duck Typing (see “looksLike()”).
-	 *
-	 * @param mixed        $value
-	 * @param  array|string $patterns Either  an array,  or a  string containing
-	 *                                a “|”-separated list of patterns.
-	 *
-	 * @return boolean
-	 */
-	public static function matches($value, $patterns)
-	{
-		if (is_string($patterns))
-		{
-			$patterns = explode('|', $patterns);
-		}
-
-		$class = null;
-		foreach ($patterns as $pattern)
-		{
-			assert('$pattern !== ""');
-
-			if ($pattern[0] === '~')
-			{
-				if ($class === null)
-				{
-					$class = get_class($value);
-				}
-
-				if ($class === false)
-				{
-					continue;
-				}
-
-				if (self::looksLike($class, substr($pattern, 1)))
-				{
-					return true;
-				}
-			}
-			elseif (self::is($value, $pattern))
-			{
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	/**
