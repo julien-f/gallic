@@ -24,5 +24,5 @@
 /**
  * Base class for all Gallic exceptions.
  */
-class Gallic_Exception
+class Gallic_Exception extends Exception
 {}
