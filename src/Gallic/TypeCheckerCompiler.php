@@ -41,29 +41,6 @@ abstract class Gallic_TypeChecker
 	abstract function evaluate($data);
 }
 
-class Gallic_TypeChecker_Or extends Gallic_TypeChecker
-{
-	function __construct(array $patterns)
-	{
-		$this->_patterns = $patterns;
-	}
-
-	function evaluate($data)
-	{
-		foreach ($this->_patterns as $pattern)
-		{
-			if ($pattern->evaluate($data))
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private $_patterns;
-}
-
 class Gallic_TypeChecker_List extends Gallic_TypeChecker
 {
 	function __construct(array $patterns)
@@ -95,6 +72,29 @@ class Gallic_TypeChecker_List extends Gallic_TypeChecker
 		}
 
 		return true;
+	}
+
+	private $_patterns;
+}
+
+class Gallic_TypeChecker_Or extends Gallic_TypeChecker
+{
+	function __construct(array $patterns)
+	{
+		$this->_patterns = $patterns;
+	}
+
+	function evaluate($data)
+	{
+		foreach ($this->_patterns as $pattern)
+		{
+			if ($pattern->evaluate($data))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private $_patterns;
@@ -180,6 +180,10 @@ class Gallic_TypeChecker_Type extends Gallic_TypeChecker
 class Gallic_TypeCheckerCompiler
 {
 	/**
+	 * Compiles a string pattern into a Gallic_TypeChecker.
+	 *
+	 * For performance concerns, the result is cached in this object.
+	 *
 	 * @param string $pattern
 	 *
 	 * @return Gallic_TypeChecker
@@ -188,31 +192,23 @@ class Gallic_TypeCheckerCompiler
 	 */
 	function compile($pattern)
 	{
+		if (isset($this->_cache[$pattern]))
+		{
+			return $this->_cache[$pattern];
+		}
+
 		$this->_pattern = $pattern;
 		$this->_i = 0;
 		$this->_n = strlen($pattern);
 
-		return $this->_or();
+		return ($this->_cache[$pattern] = $this->_list());
 	}
 
 	private
+		$_cache = array(),
 		$_pattern,
-		$_i;
-
-	private function _current()
-	{
-		if ($this->_i < $this->_n)
-		{
-			return $this->_pattern[$this->_i];
-		}
-
-		return false;
-	}
-
-	private function _next()
-	{
-		++$this->_i;
-	}
+		$_i,
+		$_n;
 
 	private function _check($allowed)
 	{
@@ -221,14 +217,14 @@ class Gallic_TypeCheckerCompiler
 			return false;
 		}
 
-		$cmp = substr_compare($this->_pattern, $allowed, $this->_i,
-		                      strlen($allowed));
+		$length = strlen($allowed);
+		$cmp = substr_compare($this->_pattern, $allowed, $this->_i, $length);
 		if ($cmp !== 0)
 		{
 			return false;
 		}
 
-		$this->_next();
+		$this->_i += $length;
 		return true;
 	}
 
@@ -307,7 +303,7 @@ class Gallic_TypeCheckerCompiler
 	{
 		if ($this->_check('('))
 		{
-			$result = $this->_or();
+			$result = $this->_list();
 			$this->_expect(')');
 			return $result;
 		}
