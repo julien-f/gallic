@@ -210,7 +210,7 @@ final class Gallic_Type
 				($i_method->isStatic() === $c_method->isStatic())
 				&&
 				(
-					$c_method->getNumberOfRequiredParameters() >
+					$c_method->getNumberOfRequiredParameters() <=
 					$i_method->getNumberOfRequiredParameters()
 				)
 			))
