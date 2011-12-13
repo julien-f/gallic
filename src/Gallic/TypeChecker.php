@@ -41,22 +41,22 @@
  *     matches either strings or integers.
  *
  *   boolean[]
- *     matches arrays of booleans (0 to ∞).
+ *     matches non-empty arrays of booleans (0 to ∞).
  *
  *   boolean,object
  *     matches arrays containing a boolean and an object.
  *
  *   (string|(boolean,object))[]
- *     matches arrays  containing either strings or arrays  containing a boolean
- *     and an object.
+ *     matches non-empty  arrays containing either strings  or arrays containing
+ *     a boolean and an object.
  *
  *   int[10]
  *     matches arrays of exactly 10 integers.
  *
- *   int[2..]
- *     matches arrays with 2 or more integers.
+ *   int[0..]
+ *     matches arrays with 0 or more integers.
  *
- *   int[..5]
+ *   int[0..5]
  *     matches array with 5 or less integers.
  */
 abstract class Gallic_TypeChecker
@@ -132,7 +132,7 @@ abstract class Gallic_TypeChecker
 		{
 			self::$_i += strlen($matches[0]);
 
-			return $matches[0];
+			return $matches;
 		}
 
 		return false;
@@ -182,22 +182,36 @@ abstract class Gallic_TypeChecker
 
 		if (self::_check('['))
 		{
-			if ($tmp = self::_regexp('/[0-9]+\.\.[0-9]*|\.\.[0-9]+/'))
+			$min = 1;
+			$max = null;
+
+			if (($tmp = self::_regexp('/(\d*)(\.\.)?(\d*)/')) &&
+			    ($tmp[0] !== ''))
 			{
-				list($min, $max) = explode('..', $tmp);
-				$min = ($min === '' ? null : (int) $min);
-				$max = ($max === '' ? null : (int) $max);
-			}
-			elseif (($tmp = self::_regexp('/[0-9]+/')) !== false) // $tmp can be “0”.
-			{
-				$min = $max = (int) $tmp;
-			}
-			else
-			{
-				$min = $max = null;
+				if ($tmp[3] !== '')
+				{
+					$max = (int) $tmp[3];
+					if ($tmp[1] !== '')
+					{
+						$min = (int) $tmp[1];
+					}
+				}
+				elseif ($tmp[1] !== '')
+				{
+					$min = (int) $tmp[1];
+					if ($tmp[2] === '')
+					{
+						$max = $min;
+					}
+				}
+				else
+				{
+					throw new Gallic_Exception('invalid range at character '.self::$_i);
+				}
 			}
 
 			self::_expect(']');
+
 			return new Gallic_TypeChecker_Array($result, $min, $max);
 		}
 
@@ -220,7 +234,7 @@ abstract class Gallic_TypeChecker
 	{
 		if ($result = self::_regexp('/~?[a-z_][a-z0-9_]*/i'))
 		{
-			return new Gallic_TypeChecker_Type($result);
+			return new Gallic_TypeChecker_Type($result[0]);
 		}
 
 		throw new Gallic_Exception('unexpected character');
@@ -229,6 +243,9 @@ abstract class Gallic_TypeChecker
 
 class Gallic_TypeChecker_List extends Gallic_TypeChecker
 {
+	/**
+	 * @param Gallic_TypeChecker[2..] $pattern
+	 */
 	function __construct(array $patterns)
 	{
 		$this->_patterns = $patterns;
@@ -265,6 +282,9 @@ class Gallic_TypeChecker_List extends Gallic_TypeChecker
 
 class Gallic_TypeChecker_Or extends Gallic_TypeChecker
 {
+	/**
+	 * @param Gallic_TypeChecker[2..] $pattern
+	 */
 	function __construct(array $patterns)
 	{
 		$this->_patterns = $patterns;
@@ -288,7 +308,11 @@ class Gallic_TypeChecker_Or extends Gallic_TypeChecker
 
 class Gallic_TypeChecker_Array extends Gallic_TypeChecker
 {
-	function __construct($pattern, $min, $max)
+	/**
+	 * @param integer      $min
+	 * @param integer|null $max
+	 */
+	function __construct(Gallic_TypeChecker $pattern, $min, $max)
 	{
 		$this->_pattern = $pattern;
 		$this->_min = $min;
@@ -304,7 +328,7 @@ class Gallic_TypeChecker_Array extends Gallic_TypeChecker
 
 		$n = count($data);
 
-		if (($this->_min !== null) && ($n < $this->_min))
+		if ($n < $this->_min)
 		{
 			return false;
 		}
@@ -333,6 +357,9 @@ class Gallic_TypeChecker_Array extends Gallic_TypeChecker
 
 class Gallic_TypeChecker_Type extends Gallic_TypeChecker
 {
+	/**
+	 * @param string $type
+	 */
 	function __construct($type)
 	{
 		$this->_type = $type;
