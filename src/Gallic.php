@@ -21,42 +21,85 @@
  * @package Gallic
  */
 
+/**
+ * This namespace contains the core data and functionnalities of Gallic.
+ */
 final class Gallic
 {
+	/**
+	 * Current version of the framework.
+	 *
+	 * @var string
+	 */
 	const VERSION = '0.2.0';
 
-	public static $include_dirs = array();
+	/**
+	 * This is, more or less, the equivalent of PHP's “include_path”.
+	 *
+	 * @var array
+	 */
+	public static $paths = array();
 
 	/**
-	 * Defines a constant if necessary.
+	 * Initializes Gallic.
 	 *
-	 * @param type $name
-	 * @param type $value
+	 * This method is automatically called just after this class' definition and
+	 * MUST not be called afterwards.
 	 */
-	public static function define_default($name, $value)
+	public static function _init()
 	{
-		if (!defined($name))
-		{
-			define($name, $value);
-		}
+		self::$paths[] = defined('__DIR__') ? __DIR__ : dirname(__FILE__);
+
+		spl_autoload_register(array(__CLASS__, '_autoload'));
+	}
+
+	private static function _autoload($classname)
+	{
+		return (Gallic_Loader::loadClass($classname) &&
+		        (class_exists($classname, false) ||
+		         interface_exists($classname, false)));
 	}
 
 	private function __construct() {}
 
 	private function __clone() {}
 }
-Gallic::$include_dirs[] = defined('__DIR__') ? __DIR__ : dirname(__FILE__);
+Gallic::_init();
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * This namespace provides paths related functions.
+ */
 final class Gallic_Path
 {
+	/**
+	 * Checks if a path is absolute.
+	 *
+	 * Note: This function only works with POSIX paths.
+	 *
+	 * @param string $path
+	 *
+	 * @return boolean
+	 */
 	public static function is_absolute($path)
 	{
 		return ($path[0] === '/');
 	}
 
-	public static function join()
+	/**
+	 * Joins multiple paths.
+	 *
+	 * Note:  This function  postulates that  all  arguments but  the parent  are
+	 * relative paths.
+	 *
+	 * @param string $parent
+	 * @param string $path1
+	 * @param string $...
+	 *
+	 * @return string
+	 */
+	public static function join($parent, $path1)
 	{
 		// Prior  to PHP  5.3, func_get_args()  cannot  be used  directly as  an
 		// argument.
@@ -69,9 +112,9 @@ final class Gallic_Path
 	/**
 	 * Normalizes a path, which means, removes every '//', '.' and '..'.
 	 *
-	 * @param string $path The path to normalize.
+	 * @param string $path
 	 *
-	 * @return string The path normalized.
+	 * @return string
 	 */
 	public static function normalize($path)
 	{
@@ -129,8 +172,26 @@ final class Gallic_Path
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * This namespace provides files' related operations.
+ */
 final class Gallic_File
 {
+	/**
+	 * Finds a file which satisfies a predicate.
+	 *
+	 * If  the path  is relative,  the file  will be  searched in  the specified
+	 * directories.
+	 *
+	 * @param string        $path      Absolute or relative file path.
+
+	 * @param callback|null $predicate The  predicate the file  MUST  statisfies
+	 *                                 (default is “is_readable”).
+	 * @param string[]|null $dirs      The directories where to  search the file
+	 *                                 (default is “Gallic::$paths”).
+	 *
+	 * @return string|false The path of the file if found, otherwise false.
+	 */
 	public static function find($path, $predicate = null, $dirs = null)
 	{
 		if (is_null($predicate))
@@ -138,7 +199,7 @@ final class Gallic_File
 			$predicate = 'is_readable';
 		}
 
-		$dirs = $dirs !== null ? (array) $dirs : Gallic::$include_dirs;
+		$dirs = $dirs !== null ? (array) $dirs : Gallic::$paths;
 
 		if (Gallic_Path::is_absolute($path))
 		{
@@ -164,26 +225,39 @@ final class Gallic_File
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * This namespace provides loading facilities.
+ */
 final class Gallic_Loader
 {
 	/**
-	 * Interface for spl_autoload().
+	 * Tries to loads a class.
 	 *
-	 * @param string $classname
+	 * Note: Excepted from the  namespace handling, this implementation complies
+	 * to PSR-0.
+	 *
+	 * @param string        $classname
+	 * @param string[]|null $dirs
+	 *
+	 * @return boolean
 	 */
-	public static function autoload($classname)
-	{
-		return (self::loadClass($classname) &&
-		        (class_exists($classname, false) ||
-		         interface_exists($classname, false)));
-	}
-
 	public static function loadClass($classname, $dirs = null)
 	{
 		$path = str_replace('_', DIRECTORY_SEPARATOR, $classname).'.php';
 		return self::loadFile($path, $dirs);
 	}
 
+	/**
+	 * Tries to loads a file.
+	 *
+	 * Note: If the path is relative, the file will be searched in the specified
+	 * directories (or “Gallic::$paths” if null).
+	 *
+	 * @param string        $classname
+	 * @param string[]|null $dirs
+	 *
+	 * @return boolean
+	 */
 	public static function loadFile($path, $dirs = null)
 	{
 		$path = Gallic_File::find($path, 'is_readable', $dirs);
@@ -201,4 +275,3 @@ final class Gallic_Loader
 
 	private function __clone() {}
 }
-spl_autoload_register(array('Gallic_Loader', 'autoload'));

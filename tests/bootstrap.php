@@ -6,7 +6,7 @@
 
 require(dirname(__FILE__).'/../src/Gallic.php');
 
-Gallic::$include_dirs[] = dirname(__FILE__).'/src';
+Gallic::$paths[] = dirname(__FILE__).'/src';
 
 ////////////////////////////////////////////////////////////////////////////////
 
