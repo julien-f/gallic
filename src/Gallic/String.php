@@ -26,6 +26,14 @@
  */
 final class Gallic_String
 {
+	/**
+	 * Checks whether the string has a certain prefix.
+	 *
+	 * @param string $string
+	 * @param string $prefix
+	 *
+	 * @return boolean
+	 */
 	public static function has_prefix($string, $prefix)
 	{
 		$prefix_l = strlen($prefix);
@@ -38,6 +46,14 @@ final class Gallic_String
 		return (strncmp($string, $prefix, $prefix_l) === 0);
 	}
 
+	/**
+	 * Checks whether the string has a certain suffix.
+	 *
+	 * @param string $string
+	 * @param string $prefix
+	 *
+	 * @return boolean
+	 */
 	public static function has_suffix($string, $suffix)
 	{
 		$suffix_l = strlen($suffix);
