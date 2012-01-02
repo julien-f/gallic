@@ -21,7 +21,7 @@
  * @package Gallic
  */
 
-final class Gallic_ClassLoader_BlackList extends Gallic_ClassLoader_Abstract
+final class Gallic_ClassLoader_BlackList implements Gallic_ClassLoader
 {
 	/**
 	 * @param string[] $black_list
@@ -32,7 +32,7 @@ final class Gallic_ClassLoader_BlackList extends Gallic_ClassLoader_Abstract
 		$this->_black_list = array_flip($black_list);
 	}
 
-	protected function _load($class_name)
+	function load($class_name)
 	{
 		if (isset($this->_black_list[$class_name]))
 		{

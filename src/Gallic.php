@@ -338,7 +338,7 @@ abstract class Gallic_ClassLoader_Abstract implements Gallic_ClassLoader
 	}
 }
 
-class Gallic_ClassLoader_PrefixFilter extends Gallic_ClassLoader_Abstract
+class Gallic_ClassLoader_PrefixFilter implements Gallic_ClassLoader
 {
 	function __construct(Gallic_ClassLoader $cl, array $prefixes)
 	{
@@ -346,7 +346,7 @@ class Gallic_ClassLoader_PrefixFilter extends Gallic_ClassLoader_Abstract
 		$this->_prefixes = $prefixes;
 	}
 
-	protected function _load($class_name)
+	function load($class_name)
 	{
 		foreach ($this->_prefixes as $prefix)
 		{
