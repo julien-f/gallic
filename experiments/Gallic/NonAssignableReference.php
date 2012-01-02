@@ -57,49 +57,49 @@
  */
 class Gallic_NonAssignableReference implements ArrayAccess, Countable, IteratorAggregate
 {
-	public function __construct(&$object)
+	function __construct(&$object)
 	{
 		$this->_ref = &$object;
 	}
 
-	public function __call($name, $arguments)
+	function __call($name, $arguments)
 	{
-		return call_user_func_args(array($this->_ref, $name), $arguments);
+		return call_user_func_array(array($this->_ref, $name), $arguments);
 	}
 
-	public function __clone()
+	function __clone()
 	{
 		return clone $this->_ref;
 	}
 
-	public function __get($name)
+	function __get($name)
 	{
 		return $this->_ref->$name;
 	}
 
-	public function __invoke()
+	function __invoke()
 	{
 		$args = func_get_args();
 
-		return call_user_func_args($this->_ref, $args);
+		return call_user_func_array($this->_ref, $args);
 	}
 
-	public function __isset($name)
+	function __isset($name)
 	{
 		return isset($this->_ref->$name);
 	}
 
-	public function __set($name, $value)
+	function __set($name, $value)
 	{
 		$this->_ref->$name = $value;
 	}
 
-	public function __toString()
+	function __toString()
 	{
 		return ((string) $this->_ref);
 	}
 
-	public function __unset($name)
+	function __unset($name)
 	{
 		unset($this->_ref->$name);
 	}
@@ -107,7 +107,7 @@ class Gallic_NonAssignableReference implements ArrayAccess, Countable, IteratorA
 	////////////////////////////////////////
 	// Countable
 
-	public function count()
+	function count()
 	{
 		return count($this->_ref);
 	}
@@ -115,11 +115,16 @@ class Gallic_NonAssignableReference implements ArrayAccess, Countable, IteratorA
 	////////////////////////////////////////
 	// IteratorAggregate
 
-	public function getIterator()
+	function getIterator()
 	{
 		if (is_array($this->_ref))
 		{
 			return new ArrayIterator($this->_ref);
+		}
+
+		if ($this->_ref instanceof Iterator)
+		{
+			return $this->_ref;
 		}
 
 		return $this->_ref->getIterator();
@@ -128,22 +133,22 @@ class Gallic_NonAssignableReference implements ArrayAccess, Countable, IteratorA
 	////////////////////////////////////////
 	// ArrayAccess
 
-	public function offsetExists($name)
+	function offsetExists($name)
 	{
 		return isset($this->_ref[$name]);
 	}
 
-	public function offsetGet($name)
+	function offsetGet($name)
 	{
 		return $this->_ref[$name];
 	}
 
-	public function offsetSet($name, $value)
+	function offsetSet($name, $value)
 	{
 		$this->_ref[$name] = $value;
 	}
 
-	public function offsetUnset($name)
+	function offsetUnset($name)
 	{
 		unset($this->_ref[$name]);
 	}

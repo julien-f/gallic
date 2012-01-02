@@ -26,7 +26,7 @@ final class Gallic_Reflection
 	/**
 	 * @param string $name
 	 */
-	public static function getFunctionSignature($name)
+	static function getFunctionSignature($name)
 	{
 		static $cache = array();
 

@@ -45,20 +45,22 @@ final class Gallic_ErrorSuppressor
 	/**
 	 * @param integer $error_types
 	 */
-	public function __construct(
-		$error_types = E_NOTICE | E_USER_NOTICE | E_WARNING | E_USER_WARNING
-	)
+	function __construct($error_types = null)
 	{
+		if ($error_types === null)
+		{
+			$error_types =
+				E_NOTICE | E_USER_NOTICE | E_WARNING | E_USER_WARNING;
+		}
 		set_error_handler(array($this, '_errorHandler'), $error_types);
 	}
 
-	public function __destruct()
+	function __destruct()
 	{
 		restore_error_handler();
 	}
 
-	private function _errorHandler($errno, $errstr, $errfile, $errline,
-	                               array $errcontext)
+	function _errorHandler($numero, $message, $file, $line, array $context)
 	{
 		$this->numero  = $errno;
 		$this->message = $errstr;

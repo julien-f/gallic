@@ -23,13 +23,13 @@
 
 class Gallic_Config implements ArrayAccess, Countable, IteratorAggregate
 {
-	public function __construct(array $entries, $read_only = false)
+	function __construct(array $entries, $read_only = false)
 	{
 		$this->setEntries($entries);
 		$this->setReadOnly($read_only);
 	}
 
-	public function __get($name)
+	function __get($name)
 	{
 		if (!isset($this->_entries[$name]))
 		{
@@ -39,12 +39,12 @@ class Gallic_Config implements ArrayAccess, Countable, IteratorAggregate
 		return $this->_entries[$name];
 	}
 
-	public function __isset($name)
+	function __isset($name)
 	{
 		return array_key_exists($name, $this->_entries);
 	}
 
-	public function __set($name, $value)
+	function __set($name, $value)
 	{
 		if ($this->isReadOnly())
 		{
@@ -59,7 +59,7 @@ class Gallic_Config implements ArrayAccess, Countable, IteratorAggregate
 		$this->_entries[$name] = $value;
 	}
 
-	public function __unset($name)
+	function __unset($name)
 	{
 		if ($this->isReadOnly())
 		{
@@ -69,7 +69,7 @@ class Gallic_Config implements ArrayAccess, Countable, IteratorAggregate
 		unset($this->_entries[$name]);
 	}
 
-	public function get($name, $default = null)
+	function get($name, $default = null)
 	{
 		if (isset($this->_entries[$name]))
 		{
@@ -79,12 +79,12 @@ class Gallic_Config implements ArrayAccess, Countable, IteratorAggregate
 		return $default;
 	}
 
-	public function isReadOnly()
+	function isReadOnly()
 	{
 		return $this->_read_only;
 	}
 
-	public function setEntries(array $entries)
+	function setEntries(array $entries)
 	{
 		foreach ($entries as $name => $value)
 		{
@@ -92,12 +92,12 @@ class Gallic_Config implements ArrayAccess, Countable, IteratorAggregate
 		}
 	}
 
-	public function setReadOnly($read_only)
+	function setReadOnly($read_only)
 	{
 		$this->_read_only = $read_only;
 	}
 
-	public function toArray()
+	function toArray()
 	{
 		$result = array();
 
@@ -117,7 +117,7 @@ class Gallic_Config implements ArrayAccess, Countable, IteratorAggregate
 	////////////////////////////////////////
 	// Countable
 
-	public function count()
+	function count()
 	{
 		return count($this->_entries);
 	}
@@ -125,7 +125,7 @@ class Gallic_Config implements ArrayAccess, Countable, IteratorAggregate
 	////////////////////////////////////////
 	// IteratorAggregate
 
-	public function getIterator()
+	function getIterator()
 	{
 		return new ArrayIterator($this->_entries);
 	}
@@ -133,22 +133,22 @@ class Gallic_Config implements ArrayAccess, Countable, IteratorAggregate
 	////////////////////////////////////////
 	// ArrayAccess
 
-	public function offsetExists($name)
+	function offsetExists($name)
 	{
 		return $this->__isset($name);
 	}
 
-	public function offsetGet($name)
+	function offsetGet($name)
 	{
 		return $this->__get($name);
 	}
 
-	public function offsetSet($name, $value)
+	function offsetSet($name, $value)
 	{
 		$this->__set($name, $value);
 	}
 
-	public function offsetUnset($name)
+	function offsetUnset($name)
 	{
 		$this->__unset($name);
 	}

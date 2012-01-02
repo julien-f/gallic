@@ -36,7 +36,7 @@ final class Gallic_Type
 	 *
 	 * @return boolean
 	 */
-	public static function is($value, $type)
+	static function is($value, $type)
 	{
 		static $validators = array(
 			'array'     => '',
@@ -96,7 +96,7 @@ final class Gallic_Type
 	 *
 	 * @return boolean
 	 */
-	public static function looksLike($class, $interface)
+	static function looksLike($class, $interface)
 	{
 		static $cache = array();
 

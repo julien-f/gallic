@@ -21,51 +21,34 @@
  * @package Gallic
  */
 
-/**
- * Various string operations.
- */
-final class Gallic_String
+final class Gallic_ClassLoader_WhiteList extends Gallic_ClassLoader_Abstract
 {
 	/**
-	 * Checks whether the string has a certain prefix.
-	 *
-	 * @param string $string
-	 * @param string $prefix
-	 *
-	 * @return boolean
+	 * @param string[] $white_list
 	 */
-	static function hasPrefix($string, $prefix)
+	function __construct(Gallic_ClassLoader $cl, array $white_list)
 	{
-		$prefix_l = strlen($prefix);
+		$this->_cl = $cl;
+		$this->_white_list = array_flip($white_list);
+	}
 
-		if ($prefix_l > strlen($string))
+	protected function _load($class_name)
+	{
+		if (!isset($this->_white_list[$class_name]))
 		{
 			return false;
 		}
 
-		return (strncmp($string, $prefix, $prefix_l) === 0);
+		return $this->_cl->load($class_name);
 	}
 
 	/**
-	 * Checks whether the string has a certain suffix.
-	 *
-	 * @param string $string
-	 * @param string $prefix
-	 *
-	 * @return boolean
+	 * @var Gallic_ClassLoader
 	 */
-	static function hasSuffix($string, $suffix)
-	{
-		$suffix_l = strlen($suffix);
+	private $_cl;
 
-		if ($suffix_l > strlen($string))
-		{
-			return false;
-		}
-
-		return (substr_compare($string, $suffix, -$suffix_l) === 0);
-	}
-
-	private function __construct()
-	{}
+	/**
+	 * @var mixed[string]
+	 */
+	private $_white_list;
 }

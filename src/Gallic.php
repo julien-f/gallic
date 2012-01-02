@@ -22,7 +22,7 @@
  */
 
 /**
- * This namespace contains the core data and functionnalities of Gallic.
+ * This namespace contains the core data and functionalities of Gallic.
  */
 final class Gallic
 {
@@ -34,37 +34,41 @@ final class Gallic
 	const VERSION = '0.2.0';
 
 	/**
-	 * This is, more or less, the equivalent of PHP's “include_path”.
-	 *
-	 * @var array
-	 */
-	public static $paths = array();
-
-	/**
 	 * Initializes Gallic.
 	 *
-	 * This method is automatically called just after this class' definition and
-	 * MUST not be called afterwards.
+	 * This method is automatically called just at the end of this file and MUST
+	 * not be called afterwards.
 	 */
-	public static function _init()
+	static function _init()
 	{
-		self::$paths[] = defined('__DIR__') ? __DIR__ : dirname(__FILE__);
+		/*
+		 * This loader  will search  in the current  directory only  for classes
+		 * beginning with “Gallic”.
+		 */
+		$loader = new Gallic_ClassLoader_PrefixFilter(
+			new Gallic_ClassLoader_Standard(array(
+				defined('__DIR__') ? __DIR__ : dirname(__FILE__),
+			)),
+			array('Gallic')
+		);
 
-		spl_autoload_register(array(__CLASS__, '_autoload'));
-	}
-
-	private static function _autoload($classname)
-	{
-		return (Gallic_Loader::loadClass($classname) &&
-		        (class_exists($classname, false) ||
-		         interface_exists($classname, false)));
+		spl_autoload_register(array($loader, 'load'));
 	}
 
 	private function __construct() {}
-
-	private function __clone() {}
 }
-Gallic::_init();
+
+////////////////////////////////////////////////////////////////////////////////
+
+final class Gallic_OS
+{
+	static function isWindows()
+	{
+		return (PHP_SHLIB_SUFFIX === 'dll');
+	}
+
+	private function __construct() {}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,21 +80,28 @@ final class Gallic_Path
 	/**
 	 * Checks if a path is absolute.
 	 *
-	 * Note: This function only works with POSIX paths.
-	 *
 	 * @param string $path
 	 *
 	 * @return boolean
 	 */
-	public static function is_absolute($path)
+	static function isAbsolute($path)
 	{
+		if (Gallic_OS::isWindows())
+		{
+			// A absolute Windows path matches regexp(^[a-zA-Z]:).
+			return ((strlen($path) >= 2) &&
+			        ($path[1] === ':') &&
+			        (65 <= ($c = ord($path[0]))) &&
+			        ($c <= 122));
+		}
+
 		return ($path[0] === '/');
 	}
 
 	/**
 	 * Joins multiple paths.
 	 *
-	 * Note:  This function  postulates that  all  arguments but  the parent  are
+	 * Note:  This function  postulates that  all arguments  but the  parent are
 	 * relative paths.
 	 *
 	 * @param string $parent
@@ -99,7 +110,7 @@ final class Gallic_Path
 	 *
 	 * @return string
 	 */
-	public static function join($parent, $path1)
+	static function join($parent, $path1)
 	{
 		// Prior  to PHP  5.3, func_get_args()  cannot  be used  directly as  an
 		// argument.
@@ -112,11 +123,13 @@ final class Gallic_Path
 	/**
 	 * Normalizes a path, which means, removes every '//', '.' and '..'.
 	 *
+	 * Note: This function does not handle correctly non Unix paths.
+	 *
 	 * @param string $path
 	 *
 	 * @return string
 	 */
-	public static function normalize($path)
+	static function normalize($path)
 	{
 		if ($path === '')
 		{
@@ -125,35 +138,42 @@ final class Gallic_Path
 
 		$path = explode(DIRECTORY_SEPARATOR, $path);
 
-		$out = array($path[0]);
-		array_shift($path);
+		if ($path[0] === '.')
+		{
+			$out = array();
+		}
+		else
+		{
+			$out = array($path[0]);
+		}
+		unset($path[0]);
 
 		foreach ($path as $component)
 		{
 			if (($component === '') || ($component === '.'))
 			{
-				continue;
+				// Current dir.
 			}
-
-			if (($component === '..') && (($prev = end($out)) !== '..'))
+			elseif (($component !== '..') ||
+			        (($prev = end($out)) === false) ||
+			        ($prev === '..'))
 			{
-				if ($prev !== '')
-				{
-					array_pop($out);
-				}
-				continue;
+				// Normal component.
+				array_push($out, $component);
 			}
-
-			array_push($out, $component);
+			elseif ($prev !== '')
+			{
+				// Parent directory (remove the parent).
+				array_pop($out);
+			}
 		}
 
-		$n = count($out);
-		if ($n === 0)
+		if ($out === array())
 		{
 			return '.';
 		}
 
-		if ($n === 1)
+		if (count($out) === 1)
 		{
 			if ($out[0] === '')
 			{
@@ -166,8 +186,6 @@ final class Gallic_Path
 	}
 
 	private function __construct() {}
-
-	private function __clone() {}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,31 +202,27 @@ final class Gallic_File
 	 * directories.
 	 *
 	 * @param string        $path      Absolute or relative file path.
-
+	 * @param string[]      $dirs      The directories where to search the file.
 	 * @param callback|null $predicate The  predicate the file  MUST  statisfies
 	 *                                 (default is “is_readable”).
-	 * @param string[]|null $dirs      The directories where to  search the file
-	 *                                 (default is “Gallic::$paths”).
 	 *
 	 * @return string|false The path of the file if found, otherwise false.
 	 */
-	public static function find($path, $predicate = null, $dirs = null)
+	static function find($path, array $dirs, $predicate = null)
 	{
-		if (is_null($predicate))
+		if ($predicate === null)
 		{
 			$predicate = 'is_readable';
 		}
 
-		$dirs = $dirs !== null ? (array) $dirs : Gallic::$paths;
-
-		if (Gallic_Path::is_absolute($path))
+		if (Gallic_Path::isAbsolute($path))
 		{
 			return (call_user_func($predicate, $path) ? $path : false);
 		}
 
 		foreach ($dirs as $dir)
 		{
-			$full_path = Gallic_Path::join($dir, $path);
+			$full_path = $dir.DIRECTORY_SEPARATOR.$path;
 			if (call_user_func($predicate, $full_path))
 			{
 				return $full_path;
@@ -218,49 +232,25 @@ final class Gallic_File
 		return false;
 	}
 
-	private function __construct() {}
-
-	private function __clone() {}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * This namespace provides loading facilities.
- */
-final class Gallic_Loader
-{
-	/**
-	 * Tries to loads a class.
-	 *
-	 * Note: Excepted from the  namespace handling, this implementation complies
-	 * to PSR-0.
-	 *
-	 * @param string        $classname
-	 * @param string[]|null $dirs
-	 *
-	 * @return boolean
-	 */
-	public static function loadClass($classname, $dirs = null)
-	{
-		$path = str_replace('_', DIRECTORY_SEPARATOR, $classname).'.php';
-		return self::loadFile($path, $dirs);
-	}
-
 	/**
 	 * Tries to loads a file.
 	 *
 	 * Note: If the path is relative, the file will be searched in the specified
-	 * directories (or “Gallic::$paths” if null).
+	 * directories.
 	 *
 	 * @param string        $classname
 	 * @param string[]|null $dirs
 	 *
 	 * @return boolean
 	 */
-	public static function loadFile($path, $dirs = null)
+	static function load($path, $dirs = null)
 	{
-		$path = Gallic_File::find($path, 'is_readable', $dirs);
+		if ($dirs === null)
+		{
+			$dirs = array('.');
+		}
+
+		$path = self::find($path, $dirs);
 		if ($path === false)
 		{
 			return false;
@@ -272,6 +262,163 @@ final class Gallic_Loader
 	}
 
 	private function __construct() {}
-
-	private function __clone() {}
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ *
+ */
+interface Gallic_ClassLoader
+{
+	/**
+	 * Loads a class (or interface).
+	 *
+	 * The behavior is undefined if the class (or interface) is already defined.
+	 *
+	 * @param string $class
+	 *
+	 * @return boolean
+	 */
+	function load($class_name);
+}
+
+abstract class Gallic_ClassLoader_Abstract implements Gallic_ClassLoader
+{
+	/**
+	 * The inherited classes MUST define this method instead of “load()” because
+	 * this class does some additional work.
+	 *
+	 * For instance, it  checks the existence of the  class (or interface) after
+	 * the loading to provide accurate report through the returned value.
+	 *
+	 * @param string $class_name
+	 *
+	 * @return boolean
+	 */
+	abstract protected function _load($class_name);
+
+	final function load($class_name)
+	{
+		return ($this->_load($class_name) &&
+		        (class_exists($class_name, false) ||
+		         interface_exists($class_name, false)));
+	}
+
+	/**
+	 * Splits the class name into basic components.
+	 *
+	 * Components are namespaces and the class name splited at underscores.
+	 *
+	 * @param string $class_name
+	 *
+	 * @return string[]
+	 */
+	protected static function _getComponents($class_name)
+	{
+		if (PHP_VERSION_ID >= 50300)
+		{
+			$components = explode('\\', $class_name);
+			$class_name = array_pop($components);
+		}
+		else
+		{
+			$components = array();
+		}
+
+		foreach (explode('_', $class_name) as $component)
+		{
+			if ($component !== '')
+			{
+				$components[] = $component;
+			}
+		}
+
+		return $components;
+	}
+}
+
+class Gallic_ClassLoader_PrefixFilter extends Gallic_ClassLoader_Abstract
+{
+	function __construct(Gallic_ClassLoader $cl, array $prefixes)
+	{
+		$this->_cl = $cl;
+		$this->_prefixes = $prefixes;
+	}
+
+	protected function _load($class_name)
+	{
+		foreach ($this->_prefixes as $prefix)
+		{
+			if (strncmp($class_name, $prefix, strlen($prefix)) === 0)
+			{
+				return $this->_cl->load($class_name);
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * @var Gallic_ClassLoader
+	 */
+	private $_cl;
+
+	/**
+	 * @var string[]
+	 */
+	private $_prefix;
+}
+
+final class Gallic_ClassLoader_Standard extends Gallic_ClassLoader_Abstract
+{
+	/**
+	 * @param string[] $paths
+	 */
+	function __construct(array $paths)
+	{
+		$this->_paths = $paths;
+	}
+
+	protected function _load($class_name)
+	{
+		$path = implode(DIRECTORY_SEPARATOR, self::_getComponents($class_name)).'.php';
+
+		return (
+			($path = Gallic_File::find($path, $this->_paths, 'is_readable')) &&
+			Gallic_File::load($path)
+		);
+	}
+
+	/**
+	 * @var string[]
+	 */
+	private $_paths;
+}
+
+final class Gallic_ClassLoader_ClassMap extends Gallic_ClassLoader_Abstract
+{
+	function __construct(array $map)
+	{
+		$this->_map = $map;
+	}
+
+	protected function _load($class_name)
+	{
+		if (isset($this->_map[$class_name]))
+		{
+			return Gallic_File::load($this->_map[$class_name]);
+		}
+
+		return false;
+	}
+
+	/**
+	 * @var mixed[]
+	 */
+	private $_map;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Gallic::_init();
