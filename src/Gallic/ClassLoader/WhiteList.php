@@ -25,6 +25,8 @@ final class Gallic_ClassLoader_WhiteList implements Gallic_ClassLoader
 {
 	/**
 	 * @param string[] $white_list
+	 *
+	 * @codeCoverageIgnore
 	 */
 	function __construct(Gallic_ClassLoader $cl, array $white_list)
 	{

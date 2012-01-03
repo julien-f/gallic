@@ -25,6 +25,8 @@ final class Gallic_ClassLoader_BlackList implements Gallic_ClassLoader
 {
 	/**
 	 * @param string[] $black_list
+	 *
+	 * @codeCoverageIgnore
 	 */
 	function __construct(Gallic_ClassLoader $cl, array $black_list)
 	{

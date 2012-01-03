@@ -23,6 +23,45 @@
 
 final class Gallic_PathTest extends GallicTest_Base
 {
+	function isAbsoluteProvider()
+	{
+		if (!Gallic_OS::isWindows())
+		{
+			return array(
+
+				'relative' =>
+				array('relative/path', false),
+
+				'absolute' =>
+				array('/absolute/path', true),
+			);
+		}
+
+		return array(
+
+			'relative' =>
+			array('relative\\path', false),
+
+			'absolute' =>
+			array('Z:\\absolute\\path', true),
+		);
+	}
+
+	/**
+	 * @covers Gallic_Path::isAbsolute
+	 *
+	 * @dataProvider isAbsoluteProvider
+	 *
+	 * @param string  $path
+	 * @param boolean $result
+	 */
+	function testIsAbsolute($path, $result)
+	{
+		$this->assertSame($result, Gallic_Path::isAbsolute($path));
+	}
+
+	//--------------------------------------
+
 	function normalizeProvider()
 	{
 		return array(

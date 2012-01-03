@@ -398,11 +398,12 @@ final class Gallic_ClassLoader_Standard extends Gallic_ClassLoader_Abstract
 
 	protected function _load($class_name)
 	{
-		$path = implode(DIRECTORY_SEPARATOR, self::_getComponents($class_name)).'.php';
-
-		return (
-			($path = Gallic_File::find($path, $this->_paths, 'is_readable')) &&
-			Gallic_File::load($path)
+		return Gallic_File::load(
+			implode(
+				DIRECTORY_SEPARATOR,
+				self::_getComponents($class_name)
+			).'.php',
+			$this->_paths
 		);
 	}
 
