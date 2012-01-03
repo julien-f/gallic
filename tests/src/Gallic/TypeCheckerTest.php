@@ -47,6 +47,7 @@ final class Gallic_TypeCheckerTest extends GallicTest_Base
 				array(1, false),
 				array(array(), false),
 				array(array(1), true),
+				array(array(1, 'string'), false),
 				array(range(1, 10), true),
 			),
 
@@ -107,7 +108,6 @@ final class Gallic_TypeCheckerTest extends GallicTest_Base
 	 * @covers Gallic_TypeChecker::_array
 	 * @covers Gallic_TypeChecker_Array
 	 * @covers Gallic_TypeChecker::_term
-	 * @covers Gallic_TypeChecker_Term
 	 * @covers Gallic_TypeChecker::_type
 	 * @covers Gallic_TypeChecker_Type
 	 *

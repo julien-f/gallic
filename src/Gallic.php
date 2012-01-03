@@ -34,6 +34,15 @@ final class Gallic
 	const VERSION = '0.2.0';
 
 	/**
+	 * Current version of the framework as integer.
+	 *
+	 * The value is equal to: (major*100 + minor)*100 + revision
+	 *
+	 * @var integer
+	 */
+	const VERSION_ID = 200;
+
+	/**
 	 * Initializes Gallic.
 	 *
 	 * This method is automatically called just at the end of this file and MUST
@@ -55,6 +64,9 @@ final class Gallic
 		spl_autoload_register(array($loader, 'load'));
 	}
 
+	/**
+	 * @codeCoverageIgnore
+	 */
 	private function __construct() {}
 }
 
@@ -67,6 +79,9 @@ final class Gallic_OS
 		return (PHP_SHLIB_SUFFIX === 'dll');
 	}
 
+	/**
+	 * @codeCoverageIgnore
+	 */
 	private function __construct() {}
 }
 
@@ -168,15 +183,18 @@ final class Gallic_Path
 		{
 			if ($absolute)
 			{
-				return '/';
+				return DIRECTORY_SEPARATOR;
 			}
 			return '.';
 		}
 
 		$path = implode(DIRECTORY_SEPARATOR, $out);
-		return ($absolute ? '/'.$path : $path);
+		return ($absolute ? DIRECTORY_SEPARATOR.$path : $path);
 	}
 
+	/**
+	 * @codeCoverageIgnore
+	 */
 	private function __construct() {}
 }
 
@@ -253,6 +271,9 @@ final class Gallic_File
 		return true;
 	}
 
+	/**
+	 * @codeCoverageIgnore
+	 */
 	private function __construct() {}
 }
 
@@ -332,6 +353,9 @@ abstract class Gallic_ClassLoader_Abstract implements Gallic_ClassLoader
 
 class Gallic_ClassLoader_PrefixFilter implements Gallic_ClassLoader
 {
+	/**
+	 * @codeCoverageIgnore
+	 */
 	function __construct(Gallic_ClassLoader $cl, array $prefixes)
 	{
 		$this->_cl = $cl;
