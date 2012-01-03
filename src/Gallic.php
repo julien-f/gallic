@@ -137,17 +137,8 @@ final class Gallic_Path
 		}
 
 		$path = explode(DIRECTORY_SEPARATOR, $path);
-
-		if ($path[0] === '.')
-		{
-			$out = array();
-		}
-		else
-		{
-			$out = array($path[0]);
-		}
-		unset($path[0]);
-
+		$absolute = ($path[0] === '');
+		$out = array();
 		foreach ($path as $component)
 		{
 			if (($component === '') || ($component === '.'))
@@ -155,13 +146,18 @@ final class Gallic_Path
 				// Current dir.
 			}
 			elseif (($component !== '..') ||
-			        (($prev = end($out)) === false) ||
-			        ($prev === '..'))
+			        (($prev = end($out)) === '..') ||
+			        ($prev === $absolute))
 			{
-				// Normal component.
+				/*
+				 * - Normal component
+				 * - Parent directory and:
+				 *   - the previous is already parent directory;
+				 *   - there is no previous and the path is not absolute.
+				 */
 				array_push($out, $component);
 			}
-			elseif ($prev !== '')
+			else
 			{
 				// Parent directory (remove the parent).
 				array_pop($out);
@@ -170,19 +166,15 @@ final class Gallic_Path
 
 		if ($out === array())
 		{
-			return '.';
-		}
-
-		if (count($out) === 1)
-		{
-			if ($out[0] === '')
+			if ($absolute)
 			{
 				return '/';
 			}
-			return $out[0];
+			return '.';
 		}
 
-		return implode(DIRECTORY_SEPARATOR, $out);
+		$path = implode(DIRECTORY_SEPARATOR, $out);
+		return ($absolute ? '/'.$path : $path);
 	}
 
 	private function __construct() {}
