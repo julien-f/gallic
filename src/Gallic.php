@@ -179,13 +179,9 @@ final class Gallic_Path
 			}
 		}
 
-		if ($out === array())
+		if (empty($out))
 		{
-			if ($absolute)
-			{
-				return DIRECTORY_SEPARATOR;
-			}
-			return '.';
+			return ($absolute ? DIRECTORY_SEPARATOR : '.');
 		}
 
 		$path = implode(DIRECTORY_SEPARATOR, $out);
@@ -253,7 +249,7 @@ final class Gallic_File
 	 *
 	 * @return boolean
 	 */
-	static function load($path, $dirs = null)
+	static function load($path, array $dirs = null)
 	{
 		if ($dirs === null)
 		{
