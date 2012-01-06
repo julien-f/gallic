@@ -11,50 +11,68 @@ $p = new Gallic_Profiler();
 $size  = $loops = 1e3;
 
 $data = new SplFixedArray($size);
-$results = new SplFixedArray($size);
 for ($i = 0; $i < $size; ++$i)
 {
-	$data[$i] = (rand(0, 1) === 0 ? null : true);
-	$results[$i] = true;
+	$data[$i] = rand(0, 4);
 }
+unset($i);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-$p->start('!isset($val)');
+$p->start('switch');
 for ($i = 0; $i < $loops; ++$i)
 {
-	foreach ($data as $j => $entry)
+	$sum = 0;
+	foreach ($data as $j)
 	{
-		$results[$j] = !isset($entry);
+		switch ($j)
+		{
+		case 0:
+			$sum += 1;
+			break;
+		case 1:
+		case 2:
+			$sum -= 1;
+			break;
+		case 3:
+			$sum += 2;
+			break;
+		default:
+			$sum -= 1;
+
+		}
 	}
 }
-unset($j, $entry);
+unset($sum, $i, $j);
 $p->stop();
 
 //--------------------------------------
 
-$p->start('$val === null');
+$p->start('if, elseif, else');
 for ($i = 0; $i < $loops; ++$i)
 {
-	foreach ($data as $j => $entry)
+	$sum = 0;
+	foreach ($data as $j)
 	{
-		$results[$j] = ($entry === null);
+		if ($j === 0)
+		{
+			$sum += 1;
+		}
+		elseif (($j === 1) || ($j === 2))
+		{
+			$sum -= 1;
+		}
+		elseif ($j === 3)
+		{
+			$sum += 2;
+		}
+		else
+		{
+			$sum -= 1;
+		}
 	}
 }
-unset($j, $entry);
-$p->stop();
-
-//--------------------------------------
-
-$p->start('is_null($val)');
-for ($i = 0; $i < $loops; ++$i)
-{
-	foreach ($data as $j => $entry)
-	{
-		$results[$j] = is_null($entry);
-	}
-}
-unset($j, $entry);
+unset($sum, $i, $j);
 $p->stop();
 
 ////////////////////////////////////////////////////////////////////////////////

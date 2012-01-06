@@ -36,25 +36,34 @@ final class Gallic_Profiler
 	{
 		assert('$this->_current === null');
 
-		$this->_max_length = max($this->_max_length, strlen($desc));
-
 		$this->_current = count($this->_runs);
 		$this->_runs[$this->_current] = array(
 			'desc' => $desc,
-			'time' => microtime(true)
+			'memory' => 0,
+			'time' => 0.0,
 		);
+
+		// Avoids polluting memory usage as much as possible.
+		unset($desc);
+
+		$this->_runs[$this->_current]['memory'] = memory_get_usage();
+		$this->_runs[$this->_current]['time']   = microtime(true);
 	}
 
 	function stop()
 	{
+		$memory = memory_get_usage();
+		$time   = microtime(true);
+
 		assert('$this->_current !== null');
 
-		$time = &$this->_runs[$this->_current]['time'];
-		$time = microtime(true) - $time;
+		$c = &$this->_runs[$this->_current];
+		$c['time']   = $time - $c['time'];
+		$c['memory'] = $memory - $c['memory'];
 
-		if (($this->_min === null) || ($time < $this->_min))
+		if (($this->_min === null) || ($c['time'] < $this->_min))
 		{
-			$this->_min = $time;
+			$this->_min = $c['time'];
 		}
 
 		$this->_current = null;
@@ -64,17 +73,66 @@ final class Gallic_Profiler
 	{
 		assert('$this->_current === null');
 
+		$header = array(
+			'desc' => '',
+			'memory' => 'Memory (bytes)',
+			'time' => 'Time (% / fastest)'
+		);
+		$paddings = array(
+			'desc' => STR_PAD_RIGHT,
+			'memory' => STR_PAD_LEFT,
+			'time' => STR_PAD_LEFT
+		);
+
+		$lengths = array_map('strlen', $header);;
+		foreach ($this->_runs as &$run)
+		{
+			$run['time'] = round($run['time'] * 100 / $this->_min);
+
+			foreach ($lengths as $key => &$value)
+			{
+				if (($len = strlen($run[$key])) > $value)
+				{
+					$value = $len;
+				}
+			}
+		}
+		unset($value, $run);
+
+		$col_sep = '│';
+		$row_sep = '─';
+		$cross   = '┼';
+		$padding = ' ';
+
+		$cols    = count($lengths);
+		$col_sep = $padding.$col_sep.$padding;
+		$cross   = str_repeat($row_sep, strlen($padding)).$cross.str_repeat($row_sep, strlen($padding));
+		$row_len = array_sum($lengths) + ($cols - 1) * strlen($col_sep);
+		$row_sep = implode($cross, array_map('str_repeat', array_fill(0, $cols, $row_sep), $lengths));
+
+		$keys = array_keys($header);
+
+		echo
+			implode($col_sep, array_map('str_pad', $header, $lengths)), PHP_EOL,
+			implode('━┿━', array_map('str_repeat', array_fill(0, $cols, '━'), $lengths)), PHP_EOL;
 		foreach ($this->_runs as $run)
 		{
 			echo
-				str_pad($run['desc'], $this->_max_length), '  |  ',
-				round($run['time']/$this->_min, 2), PHP_EOL;
+				implode(
+					$col_sep,
+					array_map(
+						'str_pad',
+						$run,
+						$lengths,
+						array_fill(0, $cols,' '),
+						$paddings
+					)
+				), PHP_EOL,
+				$row_sep, PHP_EOL;
 		}
 	}
 
 	private $_current = null;
-
-	private $_max_length = null;
 
 	private $_min = null;
 

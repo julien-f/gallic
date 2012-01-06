@@ -94,8 +94,79 @@ final class Gallic_FileWrapper
 			$mode .= 'b';
 		}
 
-		return fopen($path, $mode);
+		$handle = fopen($path, $mode);
+		if (!$handle)
+		{
+			throw new Exception('opening failed: '.$path);
+		}
+
+		return new self($handle, $path);
 	}
+
+	/**
+	 * @param string|null $path
+	 * @param resource    $handle
+	 */
+	function __construct($handle, $path = null)
+	{
+		$this->_handle = $handle;
+		$this->_path   = $path;
+	}
+
+	/**
+	 * @param string $name
+	 */
+	function __call($name, array $args)
+	{
+		$func = strtolower($name);
+
+		if ($try = (strncmp($func, 'try', 3) === 0))
+		{
+			$func = substr($func, 3);
+		}
+
+		array_unshift($args, $this->_handle);
+		$result = call_user_func_array('f'.$func, $args);
+
+		if (!$try && ($result === false))
+		{
+			throw new Exception('file operation failed: '.$name);
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Reads  a string  until the  given character  or the  end of  the  file is
+	 * encountered.
+	 *
+	 * Note: The delimiter is not included in the returned string.
+	 *
+	 * @param string $char
+	 *
+	 * @return string
+	 */
+	public function readUntil($char)
+	{
+		$data = '';
+
+		while ((($c = $this->try_getc()) !== false) && ($c !== $char))
+		{
+			$data .= $c;
+		}
+
+		return $data;
+	}
+
+	/**
+	 * @var string|null
+	 */
+	private $_path;
+
+	/**
+	 * @var resource
+	 */
+	private $_handle;
 
 	private static function _getMode($mode)
 	{

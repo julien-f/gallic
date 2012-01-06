@@ -10,51 +10,60 @@ $p = new Gallic_Profiler();
 
 $size  = $loops = 1e3;
 
-$data = new SplFixedArray($size);
-$results = new SplFixedArray($size);
-for ($i = 0; $i < $size; ++$i)
+$data = range(0, $size - 1);
+function f($data)
 {
-	$data[$i] = (rand(0, 1) === 0 ? null : true);
-	$results[$i] = true;
+	return $data;
 }
+$f = 'f';
 
 ////////////////////////////////////////////////////////////////////////////////
 
-$p->start('!isset($val)');
+$p->start('$f($data)');
 for ($i = 0; $i < $loops; ++$i)
 {
-	foreach ($data as $j => $entry)
+	$sum = 0;
+	foreach ($data as $j)
 	{
-		$results[$j] = !isset($entry);
+		$sum += $f($j);
 	}
 }
-unset($j, $entry);
+unset($sum, $i, $j);
 $p->stop();
 
 //--------------------------------------
 
-$p->start('$val === null');
+$p->start('call_user_func($f, $data)');
 for ($i = 0; $i < $loops; ++$i)
 {
-	foreach ($data as $j => $entry)
+	$sum = 0;
+	foreach ($data as $j)
 	{
-		$results[$j] = ($entry === null);
+		$sum += call_user_func($f, $j);
 	}
 }
-unset($j, $entry);
+unset($sum, $i, $j);
 $p->stop();
 
 //--------------------------------------
 
-$p->start('is_null($val)');
+// Next function requires arrays.
+foreach ($data as &$entry)
+{
+	$entry = array($entry);
+}
+unset($entry);
+
+$p->start('call_user_func_array($f, $data)');
 for ($i = 0; $i < $loops; ++$i)
 {
-	foreach ($data as $j => $entry)
+	$sum = 0;
+	foreach ($data as $j)
 	{
-		$results[$j] = is_null($entry);
+		$sum += call_user_func_array($f, $j);
 	}
 }
-unset($j, $entry);
+unset($sum, $i, $j);
 $p->stop();
 
 ////////////////////////////////////////////////////////////////////////////////
