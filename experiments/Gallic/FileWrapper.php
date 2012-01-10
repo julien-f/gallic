@@ -114,6 +114,14 @@ final class Gallic_FileWrapper
 	}
 
 	/**
+	 *
+	 */
+	function __destruct()
+	{
+		fclose($this->_handle);
+	}
+
+	/**
 	 * @param string $name
 	 */
 	function __call($name, array $args)
@@ -150,7 +158,7 @@ final class Gallic_FileWrapper
 	{
 		$data = '';
 
-		while ((($c = $this->try_getc()) !== false) && ($c !== $char))
+		while ((($c = $this->tryGetC()) !== false) && ($c !== $char))
 		{
 			$data .= $c;
 		}
