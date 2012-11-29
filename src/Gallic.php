@@ -31,7 +31,7 @@ final class Gallic
 	 *
 	 * @var string
 	 */
-	const VERSION = '0.2.0';
+	const VERSION = '0.2.1';
 
 	/**
 	 * Current version of the framework as integer.
@@ -40,28 +40,84 @@ final class Gallic
 	 *
 	 * @var integer
 	 */
-	const VERSION_ID = 200;
+	const VERSION_ID = 201;
 
 	/**
-	 * Initializes Gallic.
+	 * Triggers a warning indicating the current function is deprecated.
 	 *
-	 * This method is automatically called just at the end of this file and MUST
-	 * not be called afterwards.
+	 * The error message contains the name of the function and the file/line
+	 * where it has been called.
 	 */
-	static function _init()
+	static function deprecated()
 	{
-		/*
-		 * This loader  will search  in the current  directory only  for classes
-		 * beginning with “Gallic”.
-		 */
-		$loader = new Gallic_ClassLoader_PrefixFilter(
-			new Gallic_ClassLoader_Standard(array(
-				defined('__DIR__') ? __DIR__ : dirname(__FILE__),
-			)),
-			array('Gallic')
-		);
+		$ctx = self::getCallContext(2);
 
-		spl_autoload_register(array($loader, 'load'));
+		trigger_error(
+			'deprecated function '.$ctx[1]['who'].' called at '.$ctx[1]['where'],
+			(PHP_VERSION_ID < 50300)
+			? E_USER_WARNING
+			: E_USER_DEPRECATED
+		);
+	}
+
+	/**
+	 * Triggers a warning indicating the current function is not implemented.
+	 *
+	 * There error message contains the name of the function and the file/line
+	 * where it as been marked as not implemented.
+	 */
+	static function notImplemented()
+	{
+		$ctx = self::getCallContext(2);
+
+		trigger_error(
+			'not implemented function '.$ctx[1]['who'].' in '.$ctx[0]['where'],
+			E_USER_ERROR
+		);
+	}
+
+	/**
+	 *
+	 */
+	private static function getCallContext($n = null)
+	{
+		isset($n)
+			or $n = 1;
+
+		if (PHP_VERSION_ID < 50306)
+		{
+			$trace = debug_backtrace(false);
+		}
+		elseif (PHP_VERSION_ID < 50400)
+		{
+			$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+		}
+		else
+		{
+			$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $n);
+		}
+
+		$trace = array_slice($trace, 1, $n);
+
+		$ctx = array();
+		foreach ($trace as $t)
+		{
+			$who = $t['function'].'()';
+			isset($t['class'])
+				and $who = $t['class'].$t['type'].$who;
+
+			$where = isset($t['file'])
+				? $t['file'].':'.$t['line']
+				: '{unknown}'
+				;
+
+			$ctx[] = array(
+				'who'   => $who,
+				'where' => $where
+			);
+		}
+
+		return $ctx;
 	}
 
 	/**
@@ -72,8 +128,14 @@ final class Gallic
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+ *
+ */
 final class Gallic_OS
 {
+	/**
+	 * @return boolean
+	 */
 	static function isWindows()
 	{
 		return (PHP_SHLIB_SUFFIX === 'dll');
@@ -133,7 +195,6 @@ final class Gallic_Path
 
 		return implode(DIRECTORY_SEPARATOR, $args);
 	}
-
 
 	/**
 	 * Normalizes a path, which means, removes every '//', '.' and '..'.
@@ -292,6 +353,9 @@ interface Gallic_ClassLoader
 	function load($class_name);
 }
 
+/**
+ *
+ */
 abstract class Gallic_ClassLoader_Abstract implements Gallic_ClassLoader
 {
 	/**
@@ -347,7 +411,10 @@ abstract class Gallic_ClassLoader_Abstract implements Gallic_ClassLoader
 	}
 }
 
-class Gallic_ClassLoader_PrefixFilter implements Gallic_ClassLoader
+/**
+ *
+ */
+final class Gallic_ClassLoader_PrefixFilter implements Gallic_ClassLoader
 {
 	/**
 	 * @codeCoverageIgnore
@@ -382,6 +449,9 @@ class Gallic_ClassLoader_PrefixFilter implements Gallic_ClassLoader
 	private $_prefix;
 }
 
+/**
+ *
+ */
 final class Gallic_ClassLoader_Standard extends Gallic_ClassLoader_Abstract
 {
 	/**
@@ -409,6 +479,9 @@ final class Gallic_ClassLoader_Standard extends Gallic_ClassLoader_Abstract
 	private $_paths;
 }
 
+/**
+ *
+ */
 final class Gallic_ClassLoader_ClassMap extends Gallic_ClassLoader_Abstract
 {
 	function __construct(array $map)
@@ -434,4 +507,16 @@ final class Gallic_ClassLoader_ClassMap extends Gallic_ClassLoader_Abstract
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Gallic::_init();
+/*
+ * This loader will search in the current directory only for classes beginning
+ * with “Gallic_”.
+ */
+spl_autoload_register(array(
+	new Gallic_ClassLoader_PrefixFilter(
+		new Gallic_ClassLoader_Standard(array(
+			defined('__DIR__') ? __DIR__ : dirname(__FILE__),
+		)),
+		array('Gallic_')
+	),
+	'load'
+));
