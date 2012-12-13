@@ -31,7 +31,7 @@ final class Gallic
 	 *
 	 * @var string
 	 */
-	const VERSION = '0.2.1';
+	const VERSION = '0.2.2';
 
 	/**
 	 * Current version of the framework as integer.
@@ -40,7 +40,7 @@ final class Gallic
 	 *
 	 * @var integer
 	 */
-	const VERSION_ID = 201;
+	const VERSION_ID = 202;
 
 	/**
 	 * Triggers a warning indicating the current function is deprecated.
