@@ -23,6 +23,7 @@
 
 /**
  * @experimental
+ * @todo Add support for macro (recursive or not).
  *
  * Grammar:
  *

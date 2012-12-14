@@ -25,6 +25,7 @@
  * @experimental
  *
  * @todo Add support for default filters.
+ * @todo Correctly detect not up to date dependencies.
  */
 final class Gallic_Template_Compiler
 {
@@ -39,8 +40,8 @@ final class Gallic_Template_Compiler
 		{
 			$code =
 				'<?php if (!class_exists('.var_export($extended_class, true).
-				', false)) require(dirname(__FILE__).DIRECTORY_SEPARATOR.'.
-				var_export($extended_class, true).'.\'.php\'); class '.$class_name.
+				', false)) require(dirname(__FILE__).'.
+				var_export('/'.$extended_class.'.php', true).'); class '.$class_name.
 				' extends '.$extended_class;
 		}
 		else
@@ -188,7 +189,7 @@ final class Gallic_Template_Compiler
 		$code .= "?>\n".$this->_sequence($block['nodes']).'<?php ';
 		if ($this->_extends)
 		{
-			$code .= $this->_block($block['name']).'=ob_get_clean();';
+			$code .= $this->_block($block['name']).'=ob_get_flush();';
 		}
 		$code .= "}?>\n";
 
