@@ -23,6 +23,8 @@
 
 /**
  * @experimental
+ *
+ * Inspired by http://www.pluf.org/doc/template.html
  */
 abstract class Gallic_Template
 {
