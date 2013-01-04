@@ -1,25 +1,25 @@
 {
-    "name": "vates/gallic",
-    "description": "PHP Library.",
+	"name": "vates/gallic",
+	"description": "PHP Library.",
 	"keywords" : [
 		"autoloading",
 		"object storage",
 		"templating"
 	],
 	"license": "GPL-3.0",
-    "authors": [
-        {
-            "name": "Julien Fontanet",
-            "email": "julien.fontanet@vates.fr"
-        }
-    ],
+	"authors": [
+		{
+			"name": "Julien Fontanet",
+			"email": "julien.fontanet@vates.fr"
+		}
+	],
 	"support": {
 		"issues": "https://github.com/julien-f/gallic/issues",
 		"source": "https://github.com/julien-f/gallic"
 	},
-    "require": {
+	"require": {
 		"php": ">=5.2.0"
-    },
+	},
 	"autoload": {
 		"files": ["src/Gallic.php"]
 	}

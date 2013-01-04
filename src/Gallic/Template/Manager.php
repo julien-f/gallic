@@ -23,11 +23,28 @@
 
 /**
  * @experimental
+ *
  * @todo It is currently impossible to import a template twice (even if it
  *     changed).
+ * @todo Recompile dependencies if necessary.
  */
 final class Gallic_Template_Manager
 {
+	/**
+	 * @var array
+	 */
+	public $defaultVariables = array();
+
+	/**
+	 * @var array
+	 */
+	public $defaultFilters = array();
+
+	/**
+	 * @var array
+	 */
+	public $defaultFunctions = array();
+
 	function __construct($tpl_dir, $ttl = null, $cache_dir = null)
 	{
 		$this->_tplDir   = $tpl_dir;
@@ -46,6 +63,31 @@ final class Gallic_Template_Manager
 	 */
 	function build($path)
 	{
+		$class = $this->_build($path);
+
+		$tpl = new $class;
+		$tpl->variables = $this->defaultVariables;
+		$tpl->filters   = $this->defaultFilters;
+		$tpl->functions = $this->defaultFunctions;
+
+		return $tpl;
+	}
+
+	/**
+	 * @var Gallic_Template_Parser
+	 */
+	private $_parser;
+
+	/**
+	 * @var Gallic_Template_Compiler
+	 */
+	private $_compiler;
+
+	/**
+	 * @return string Class name.
+	 */
+	private function _build($path)
+	{
 		$tpl_path    = $this->_tplDir.'/'.$path;
 		$cache_class = $this->_getCacheClass($path);
 		$cache_path  = $this->_cacheDir.'/'.$cache_class.'.php';
@@ -53,7 +95,7 @@ final class Gallic_Template_Manager
 		// If the class is already imported, use it.
 		if (class_exists($cache_class, false))
 		{
-			return new $cache_class;
+			return $cache_class;
 		}
 
 		// If there is an up to date cache, import it.
@@ -74,7 +116,7 @@ final class Gallic_Template_Manager
 			if ($valid)
 			{
 				require($cache_path);
-				return new $cache_class;
+				return $cache_class;
 			}
 		}
 
@@ -86,8 +128,13 @@ final class Gallic_Template_Manager
 		}
 
 
-		$tpl   = file_get_contents($tpl_path);
-		$tree  = $this->_parser->parse($tpl);
+		$tpl = @file_get_contents($tpl_path);
+		if ($tpl === false)
+		{
+			throw new Gallic_Exception("could not read $tpl_path");
+		}
+
+		$tree = $this->_parser->parse($tpl);
 		if ($tree['extends'])
 		{
 			$extended_class = $this->_getCacheClass($tree['extends']);
@@ -100,20 +147,10 @@ final class Gallic_Template_Manager
 		$cache = $this->_compiler->compile($tree, $cache_class, $extended_class);
 
 		file_put_contents($cache_path, $cache);
+		require($cache_path);
 
-		eval('?>'.$cache);
-		return new $cache_class;
+		return $cache_class;
 	}
-
-	/**
-	 * @var Gallic_Template_Parser
-	 */
-	private $_parser;
-
-	/**
-	 * @var Gallic_Template_Compiler
-	 */
-	private $_compiler;
 
 	/**
 	 *

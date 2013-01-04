@@ -35,13 +35,22 @@ abstract class Gallic_Template
 	final function __construct()
 	{}
 
-	final function render(array $variables = null)
+	final function render(
+		array $variables = null,
+		array $filters = null,
+		array $functions = null
+	)
 	{
-		($variables === null)
-			and $variables = $this->variables;
-
-		return $this->_render($variables, $this->filters, $this->functions);
+		return $this->_render(
+			(array) $variables + $this->variables,
+			(array) $filters   + $this->filters,
+			(array) $functions + $this->functions
+		);
 	}
 
-	abstract protected function _render(array $variables, array $filters, array $functions);
+	abstract protected function _render(
+		array $variables,
+		array $filters,
+		array $functions
+	);
 }
