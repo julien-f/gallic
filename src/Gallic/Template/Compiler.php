@@ -73,7 +73,7 @@ final class Gallic_Template_Compiler
 
 		if (is_callable($m))
 		{
-			return $m($node);
+			return call_user_func($m, $node);
 		}
 
 		throw new Gallic_Exception('unsupported node '.$node[0]);
