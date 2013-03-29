@@ -126,7 +126,7 @@ final class Gallic_Template_Compiler
 		$code = '<?php echo ';
 		foreach ($var['filters'] as $filter)
 		{
-			$code .= $this->_filter($filter['name']).'(';
+			$code .= 'call_user_func('.$this->_filter($filter['name']).',';
 
 			if ($filter['modifier'])
 			{
@@ -198,7 +198,7 @@ final class Gallic_Template_Compiler
 
 	private function _v_func($func)
 	{
-		$code = '<?php echo '.$this->_func($func['name']).'($this, array(';
+		$code = '<?php echo call_user_func('.$this->_func($func['name']).',$this, array(';
 		foreach ($func['parameters'] as $param)
 		{
 			$arg = $param['value'];
